@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Send, Database, Code, CheckCircle, XCircle, Loader2, Sparkles, AlertCircle, Copy, Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Separator } from '@/components/ui/separator'
 
 interface Message {
   id: string
@@ -262,33 +268,38 @@ export default function ChatInterface() {
   const renderCodeBlock = (code: string, language: string, messageId: string) => {
     const copyId = `${messageId}-${language}`
     return (
-      <div className="relative">
-        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto my-2 border border-gray-700">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-400 text-xs uppercase tracking-wide">{language}</span>
-            <button
+      <div className="relative my-3">
+        <div className="bg-slate-950 rounded-lg border">
+          <div className="flex justify-between items-center px-4 py-2 border-b border-slate-800">
+            <Badge variant="secondary" className="text-xs font-mono">
+              {language}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => copyToClipboard(code, copyId)}
-              className="text-gray-400 hover:text-white transition-colors p-1 rounded"
-              title="Copy to clipboard"
+              className="h-6 w-6 p-0 text-slate-400 hover:text-slate-100"
             >
               {copiedStates[copyId] ? (
-                <Check className="w-4 h-4 text-green-400" />
+                <Check className="w-3 h-3 text-green-400" />
               ) : (
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3 h-3" />
               )}
-            </button>
+            </Button>
           </div>
-          <code className="whitespace-pre-wrap">{code}</code>
-        </pre>
+          <pre className="p-4 text-sm text-slate-100 overflow-x-auto">
+            <code className="whitespace-pre-wrap">{code}</code>
+          </pre>
+        </div>
       </div>
     )
   }
 
-  const getConnectionStatusColor = () => {
+  const getConnectionStatusVariant = () => {
     switch (connectionStatus) {
-      case 'connected': return 'text-green-400'
-      case 'error': return 'text-red-400'
-      default: return 'text-yellow-400'
+      case 'connected': return 'default'
+      case 'error': return 'destructive'
+      default: return 'secondary'
     }
   }
 
@@ -301,157 +312,174 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-5xl mx-auto bg-gradient-to-br from-slate-50 to-blue-50 shadow-2xl rounded-xl overflow-hidden border border-gray-200">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 text-white p-6 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Database className="w-10 h-10" />
-              <Sparkles className="w-4 h-4 absolute -top-1 -right-1 text-yellow-300" />
+    <div className="flex flex-col h-screen max-w-6xl mx-auto">
+      <Card className="flex-1 flex flex-col overflow-hidden border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        {/* Header */}
+        <CardHeader className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 text-white p-6 rounded-none">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Database className="w-10 h-10" />
+                <Sparkles className="w-4 h-4 absolute -top-1 -right-1 text-yellow-300" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">
+                  MongoDB AI Assistant
+                </h1>
+                <p className="text-blue-100 text-sm opacity-90">
+                  Transform natural language into powerful database queries
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                MongoDB AI Assistant
-              </h1>
-              <p className="text-blue-100 text-sm opacity-90">
-                Transform natural language into powerful database queries
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-400' : connectionStatus === 'error' ? 'bg-red-400' : 'bg-yellow-400'}`}></div>
-            <span className={`text-sm ${getConnectionStatusColor()}`}>
+            <Badge variant={getConnectionStatusVariant()} className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${
+                connectionStatus === 'connected' ? 'bg-green-500' : 
+                connectionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+              }`} />
               {getConnectionStatusText()}
-            </span>
+            </Badge>
           </div>
-        </div>
-      </div>
+        </CardHeader>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-transparent to-slate-50/50">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-500`}
-          >
+        {/* Messages */}
+        <CardContent className="flex-1 overflow-y-auto p-6 space-y-6">
+          {messages.map((message) => (
             <div
-              className={`max-w-4xl rounded-2xl px-6 py-4 shadow-lg border ${
-                message.type === 'user'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-500'
-                  : message.type === 'query'
-                  ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200 text-amber-900'
-                  : message.type === 'result'
-                  ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 text-emerald-900'
-                  : 'bg-white border-gray-200 text-gray-800'
-              }`}
+              key={message.id}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-500`}
             >
-              {message.type === 'query' && (
-                <div className="flex items-center space-x-2 mb-3">
-                  <Code className="w-5 h-5 text-amber-600" />
-                  <span className="text-sm font-semibold text-amber-800">Generated Query</span>
-                </div>
-              )}
+              <Card
+                className={`max-w-4xl ${
+                  message.type === 'user'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-500'
+                    : message.type === 'query'
+                    ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200'
+                    : message.type === 'result'
+                    ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200'
+                    : 'bg-background border-border'
+                }`}
+              >
+                <CardContent className="p-6">
+                  {message.type === 'query' && (
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Code className="w-5 h-5 text-amber-600" />
+                      <Badge variant="outline" className="text-amber-800 border-amber-300">
+                        Generated Query
+                      </Badge>
+                    </div>
+                  )}
 
-              {message.type === 'result' && (
-                <div className="flex items-center space-x-2 mb-3">
-                  <Database className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-semibold text-emerald-800">Query Result</span>
-                </div>
-              )}
+                  {message.type === 'result' && (
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Database className="w-5 h-5 text-emerald-600" />
+                      <Badge variant="outline" className="text-emerald-800 border-emerald-300">
+                        Query Result
+                      </Badge>
+                    </div>
+                  )}
 
-              <div className="whitespace-pre-wrap">
-                {message.content.includes('```') ? (
-                  <div>
-                    {message.content.split('```').map((part, index) => {
-                      if (index % 2 === 1) {
-                        const [language, ...codeLines] = part.split('\n')
-                        const code = codeLines.join('\n')
-                        return renderCodeBlock(code, language || 'text', message.id)
-                      }
-                      return <span key={index} className="leading-relaxed">{part}</span>
-                    })}
+                  <div className="whitespace-pre-wrap">
+                    {message.content.includes('```') ? (
+                      <div>
+                        {message.content.split('```').map((part, index) => {
+                          if (index % 2 === 1) {
+                            const [language, ...codeLines] = part.split('\n')
+                            const code = codeLines.join('\n')
+                            return renderCodeBlock(code, language || 'text', message.id)
+                          }
+                          return <span key={index} className="leading-relaxed">{part}</span>
+                        })}
+                      </div>
+                    ) : (
+                      <div className="leading-relaxed">{message.content}</div>
+                    )}
                   </div>
-                ) : (
-                  <div className="leading-relaxed">{message.content}</div>
-                )}
-              </div>
 
-              <div className="text-xs opacity-60 mt-3 flex items-center space-x-2">
-                <span>{formatTimestamp(message.timestamp)}</span>
-              </div>
+                  <div className="text-xs opacity-60 mt-3 flex items-center space-x-2">
+                    <span>{formatTimestamp(message.timestamp)}</span>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Query Approval Buttons */}
-        {pendingQuery && (
-          <div className="flex justify-center space-x-4 animate-in fade-in-0 duration-300">
-            <button
-              onClick={() => handleExecuteQuery(true)}
-              disabled={isLoading}
-              className="flex items-center space-x-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 disabled:from-emerald-400 disabled:to-green-400 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-            >
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Execute Query</span>
-            </button>
-            <button
-              onClick={() => handleExecuteQuery(false)}
-              disabled={isLoading}
-              className="flex items-center space-x-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 disabled:from-red-400 disabled:to-rose-400 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-            >
-              <XCircle className="w-5 h-5" />
-              <span className="font-medium">Cancel</span>
-            </button>
-          </div>
-        )}
-
-        {isLoading && (
-          <div className="flex justify-center animate-in fade-in-0 duration-300">
-            <div className="flex items-center space-x-3 text-gray-600 bg-white px-6 py-3 rounded-xl shadow-lg border border-gray-200">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              <span className="font-medium">Processing your request...</span>
+          {/* Query Approval Buttons */}
+          {pendingQuery && (
+            <div className="flex justify-center space-x-4 animate-in fade-in-0 duration-300">
+              <Button
+                onClick={() => handleExecuteQuery(true)}
+                disabled={isLoading}
+                className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
+                size="lg"
+              >
+                <CheckCircle className="w-5 h-5 mr-2" />
+                Execute Query
+              </Button>
+              <Button
+                onClick={() => handleExecuteQuery(false)}
+                disabled={isLoading}
+                variant="destructive"
+                size="lg"
+              >
+                <XCircle className="w-5 h-5 mr-2" />
+                Cancel
+              </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        <div ref={messagesEndRef} />
-      </div>
+          {isLoading && (
+            <div className="flex justify-center animate-in fade-in-0 duration-300">
+              <Card>
+                <CardContent className="flex items-center space-x-3 p-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                  <span className="font-medium">Processing your request...</span>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-      {/* Input */}
-      <div className="border-t bg-white/80 backdrop-blur-sm p-6">
-        <div className="flex space-x-4">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={connectionStatus === 'connected' ? "Ask me anything about your MongoDB data..." : "Connecting to server..."}
-              disabled={isLoading || connectionStatus !== 'connected'}
-              className="w-full border-2 border-gray-300 rounded-xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-800 placeholder-gray-500 shadow-sm transition-all duration-200 hover:border-gray-400"
-            />
-            {input && connectionStatus === 'connected' && (
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-                Press Enter to send
-              </div>
-            )}
+          <div ref={messagesEndRef} />
+        </CardContent>
+
+        <Separator />
+
+        {/* Input */}
+        <div className="p-6 bg-background/95 backdrop-blur-sm">
+          <div className="flex space-x-4">
+            <div className="flex-1 relative">
+              <Input
+                type="text"
+                value={input}
+                onChange={(e:any) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={connectionStatus === 'connected' ? "Ask me anything about your MongoDB data..." : "Connecting to server..."}
+                disabled={isLoading || connectionStatus !== 'connected'}
+                className="h-12 text-base"
+              />
+              {input && connectionStatus === 'connected' && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
+                  Press Enter to send
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={handleSendMessage}
+              disabled={isLoading || !input.trim() || connectionStatus !== 'connected'}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-8"
+            >
+              <Send className="w-5 h-5 mr-2" />
+              <span className="hidden sm:block">Send</span>
+            </Button>
           </div>
-          <button
-            onClick={handleSendMessage}
-            disabled={isLoading || !input.trim() || connectionStatus !== 'connected'}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-8 py-4 rounded-xl transition-all duration-200 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
-          >
-            <Send className="w-5 h-5" />
-            <span className="font-medium hidden sm:block">Send</span>
-          </button>
+          
+          <Alert className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your queries will be reviewed before execution for safety
+            </AlertDescription>
+          </Alert>
         </div>
-        
-        <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-gray-500">
-          <AlertCircle className="w-4 h-4" />
-          <span>Your queries will be reviewed before execution for safety</span>
-        </div>
-      </div>
+      </Card>
     </div>
   )
 }
