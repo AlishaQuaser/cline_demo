@@ -357,6 +357,10 @@ def execute_query_endpoint(request):
         elif hasattr(result, '__iter__') and not isinstance(result, (str, dict)):
             result = list(result)
         
+        # Limit to first 10 results
+        if isinstance(result, list):
+            result = result[:10]
+        
         # Convert ObjectId to string for JSON serialization
         result = convert_objectid(result)
         
